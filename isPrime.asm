@@ -1,3 +1,7 @@
+;Input: #number, where number is between 0 and 4,294,967,295.
+;Output: If number is prime or composite
+
+
 
 ;Register Dictionary
 ;R0 - for I/O
@@ -7,85 +11,81 @@
 ;R4 - The number being computed (the number represented by the input). THis will be copied into R3 at the end.
 ;R5 - scratch register.
  
-  .orig x3000
+	.orig x3000
 
 
 	;print the Banner 
 	LEA R0, Banner
 	TRAP x22
 
-;read in input and store into Data. Aside aside 4 bytes which is enough.
+	;read in input and store into Data. Set aside 4 bytes which is enough.
 
-  LEA R0,StrPrompt  ;print user for input.
-  trap x22
-  LEA R1,Data
+	LEA R0,StrPrompt  ;print user for input.
+	trap x22
+	LEA R1,Data
 ReadLoop: 
 
-  TRAP x20
+	TRAP x20
    
-  ADD R3,R0,#-10    ;R3 will be 0 if user hit <ENTER> (=10)
-  BRz DoneRead   
+	ADD R3,R0,#-10    ;R3 will be 0 if user hit <ENTER> (=10)
+	BRz DoneRead   
   
-  STR R0,R1,#0    ;store character read into array Data
-  ADD R1,R1,#1    ;increment array index
-  BR ReadLoop  
+	STR R0,R1,#0    ;store character read into array Data
+	ADD R1,R1,#1    ;increment array index
+	BR ReadLoop  
       
 DoneRead 
-  AND R0,R0,#0    ;set R0 to 0
-  STR R0,R1,#0    ;put null-terminating character onto string read (optional)
+	AND R0,R0,#0    ;set R0 to 0
+	STR R0,R1,#0    ;put null-terminating character onto string read (optional)
 
-  LEA R0,StrEcho    
-  Trap x22
-  LEA R0,Data     ;echo input string
-  TRAP x22  
-  LEA R0,StrNewline 
-  Trap x22
+	LEA R0,StrEcho    
+	Trap x22
+	LEA R0,Data     ;echo input string
+	TRAP x22  
+	LEA R0,StrNewline 
+	Trap x22
 
 ProcessInput      ;process the input
-  AND R4,R4,#0    ;zero out result  
-  LEA R1,Data     ;get start of input string
-  ADD R1,R1,#1	  ;IGNORE THE # SIGN IN FRONT
+	AND R4,R4,#0    ;zero out result  
+	LEA R1,Data     ;get start of input string
+	ADD R1,R1,#1	  ;IGNORE THE # SIGN IN FRONT
 
-;This handle conversion of decimal numbers.
-  LDR R2,R1,#0    ;get first digit (must be between 0 and 9, since it is a decimal digit)
+	;This handle conversion of decimal numbers.
+	LDR R2,R1,#0    ;get first digit (must be between 0 and 9, since it is a decimal digit)
 
 DecCalc
-  LD R3,ch0
-  ADD R3,R3,R2    ;compute digits value
-  ADD R4,R4,R3    ;add digit to result
+	LD R3,ch0
+	ADD R3,R3,R2    ;compute digits value
+	ADD R4,R4,R3    ;add digit to result
 DecNextChar 
-  ADD R1,R1,#1
-  LDR R2,R1,#0    ;get new digit
-  ADD R2,R2,#0    ;see if value is zero (remember, we null terminated the string)
-  BRz Done        ;yes, we are done!
-  ADD R5,R4,R4    ;multiply R4 by 10
-  ADD R5,R5,R5    ;since we do not have a multiply, we have to use a workaround.
-  ADD R5,R5,R5
-  ADD R3,R4,R4    ;At this point R3 = 2*R4, R5 = 8*R4.
-  ADD R4,R3,R5    ;R4 = R3+R5 which is 10*R4
+	ADD R1,R1,#1
+	LDR R2,R1,#0    ;get new digit
+	ADD R2,R2,#0    ;see if value is zero (remember, we null terminated the string)
+	BRz Done        ;yes, we are done!
+	ADD R5,R4,R4    ;multiply R4 by 10
+	ADD R5,R5,R5    ;since we do not have a multiply, we have to use a workaround.
+	ADD R5,R5,R5
+	ADD R3,R4,R4    ;At this point R3 = 2*R4, R5 = 8*R4.
+	ADD R4,R3,R5    ;R4 = R3+R5 which is 10*R4
 
-  BR DecCalc      ;deal with current digit  
+	BR DecCalc      ;deal with current digit  
 Done
-  ADD R3,R4,#0    ;copy final result into R3.
-
-
-	
+	ADD R3,R4,#0    ;copy final result into R3.	
 	
 
+	;Initialize stack pointer
 	AND R6,R6,#0	;	stack pointer
 	LD R6,STACKBASE	;	initialize stack pointer to 0x4000
 
 
-
-	; IS PRIME	(checking if the input is a prime number)
+	;IS PRIME	(checking if the input is a prime number)
 
 	;REGISTER DIRECTORY 
 	;R0 - 	i 
 	;R1 - 	isPrime
 	;R2 - 	-sqrt(n)
 	;R3 -	n
-	
-	
+		
 	AND R0,R0,#0
 	ADD R0,R0,#2	;	i=2
 
@@ -158,7 +158,8 @@ WHILE	;(i<=sqrt(n) and isPrime == true)
 
 
 
-ZREM	ADD R0,R0,#1;		i++ (zero remainder)
+ZREM
+	ADD R0,R0,#1;		i++ (zero remainder)
 	BR WHILE
 
 WDONE	 ;while loop done
@@ -174,22 +175,18 @@ WDONE	 ;while loop done
 
 	BR FDONE	
 	
-PRIME	LEA R0, StrPri
+PRIME	
+	LEA R0, StrPri
 
 
 FDONE	; finally done
-	
-        TRAP X22
-
+	TRAP X22
 	LEA R0, ENDPROG	; print	end of processing
 	TRAP x22
-
-
 	HALT
 
+
 ;-------------------------------------------------------------------
-
-
 
 ;Data section
 
@@ -212,10 +209,8 @@ StrComp	    .stringz  " is a composite number.\n"
 
 Banner	.stringz "Syed Habib Ur Rehman, 7763408, Comp2280, Michael Zapp, A4, q1\n"
 
-
-
-
 ;----------------------------------
+
 ;subroutine PUSH - Pushes the value stored in R4 onto the stack
 ;Data Dictionary
 ;R4 - Used for push 
@@ -247,10 +242,7 @@ VALID	LDR R4,R6,#0	;	valid so poping the value
 	ADD R6,R6,#1
 RETURN	RET
 
-
 ;----------------------------------
-
-
 
 ;subroutine MULTIPLY - computes multiplication of the two numbers passed on the stack
 ;Data Dictionary
@@ -291,7 +283,7 @@ MULTIPLY
 	BRz MRET	;	if b=2nd parameter = 0 return 0	
 	
 	
-MLOOP	
+MLOOP	;Multiplication helper
 	ADD R4,R0,R4	;	the sum
 	ADD R1,R1,#-1	;	decrement the loop index
 	BRp	MLOOP
@@ -330,6 +322,7 @@ MRET	;restore
 ;R5+1 - Parameter 2
 ;R5+2 - Parameter 1
 
+
 DIVISION	
 	
 	ADD R4,R7,#0	; 	pushing R7
@@ -363,7 +356,7 @@ DIVISION
 	BRn DRET	;	if a>=b	
 
 	
-DLOOP	
+DLOOP	;Division helper
 	ADD R4,R4,#1	;	the sum D=D+1
 	
 	ADD R0,R0,R1	;	A = A-B
@@ -392,7 +385,6 @@ DRET	;restore
 
 	RET
 
-
 ;------------------------------------------------
 
 ;subroutine SQRT - computes square root of a number passed on the stack
@@ -407,6 +399,7 @@ DRET	;restore
 ;Stack Contents:
 ;R5+0 - return value
 ;R5+1 - Parameter 1
+
 
 SQRT	
 	
@@ -438,7 +431,7 @@ SQRT
 	AND R1,R1,#0	;	R1 = x=0
 
 	
-SLOOP	
+SLOOP	;SQRT helper
 	ADD R1,R1,#1	;	x=x+1
 	ADD R4,R1,#0	;	R4 = x
 	JSR PUSH	;	save x
@@ -479,7 +472,6 @@ SLOOP
 	ADD R7,R4,#0
 
 	RET
-
 
 
     .end
